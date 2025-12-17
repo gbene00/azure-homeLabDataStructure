@@ -1,13 +1,16 @@
+### Azure Resource Group
 variable "resource_group_name" {
   type    = string
   default = "homelab-data-processing-rg"
 }
 
+### Azure Location
 variable "location" {
   type    = string
   default = "westeurope"
 }
 
+## Azure Tags
 variable "tags" {
   type = map(string)
   default = {
@@ -16,16 +19,19 @@ variable "tags" {
   }
 }
 
+## Azure Data Storage Account
 variable "data_storage_account_name" {
   type    = string
   default = "dataprocessingsa100"
 }
 
+## Blob Container for Raw Data
 variable "raw_container_name" {
   type    = string
   default = "raw-blob"
 }
 
+## Blob Container for Processed Data
 variable "processed_container_name" {
   type    = string
   default = "processed-blob"

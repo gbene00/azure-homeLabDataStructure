@@ -5,7 +5,7 @@ resource "azurerm_resource_group" "resource_group" {
   tags     = local.tags
 }
 
-## Storage (data storage + containers + blob properties)
+## Storage module (data storage + containers + blob properties)
 module "storage" {
   source = "../infra/modules/storage"
 
@@ -20,7 +20,7 @@ module "storage" {
   soft_delete_retention_days  = var.soft_delete_retention_days
 }
 
-## Monitoring (Log Analytics + Application Insights)
+## Monitoring module (Log Analytics + Application Insights)
 module "monitoring" {
   source = "../infra/modules/monitoring"
 
@@ -32,7 +32,7 @@ module "monitoring" {
   app_insights_name            = var.app_insights_name
 }
 
-## Document Intelligence
+## Document Intelligence module
 module "docu_intelligence" {
   source = "../infra/modules/docu-intelligence"
 
@@ -42,7 +42,7 @@ module "docu_intelligence" {
   document_intelligence_name = var.document_intelligence_name
 }
 
-## Function App (plan + function app + RBAC)
+## Function App module (plan + function app + RBAC)
 module "function_app" {
   source = "../infra/modules/function-app"
 
@@ -80,7 +80,7 @@ module "function_app" {
   ]
 }
 
-## Static Web App
+## Static Web App module
 module "static_web_app" {
   source = "../infra/modules/static-web-app"
 

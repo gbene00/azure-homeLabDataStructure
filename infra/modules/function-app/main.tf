@@ -19,7 +19,7 @@ resource "azurerm_service_plan" "function_plan" {
   location            = var.location
 
   os_type  = "Linux"
-  sku_name = "Y1" # Consumption
+  sku_name = "Y1" # Consumption Tier
 
   tags = var.tags
 }
@@ -47,7 +47,7 @@ resource "azurerm_linux_function_app" "function_app" {
   }
 
   app_settings = merge(var.function_app_settings_base, {
-    ## Blob trigger + internal runtime storage binding
+    ## Blob trigger and internal runtime storage binding
     AzureWebJobsStorage = azurerm_storage_account.runtime_storage.primary_connection_string
 
     ## App config
@@ -69,7 +69,7 @@ resource "azurerm_linux_function_app" "function_app" {
   ]
 }
 
-## Assign Function App Managed Identity Blob Data Contributor role on DATA storage account
+## Azure Role Assignment: Storage Blob Data Contributor for Function App to Data Storage Account
 resource "azurerm_role_assignment" "function_blob_contributor" {
   scope                = var.data_storage_account_id
   role_definition_name = "Storage Blob Data Contributor"
