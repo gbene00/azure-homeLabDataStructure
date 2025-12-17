@@ -1,4 +1,3 @@
-
 ## Resource Group
 resource "azurerm_resource_group" "resource_group" {
   name     = var.resource_group_name
@@ -6,186 +5,88 @@ resource "azurerm_resource_group" "resource_group" {
   tags     = local.tags
 }
 
-## Azure Storage Account
-resource "azurerm_storage_account" "storage_account" {
-  name                     = var.data_storage_account_name
-  resource_group_name      = azurerm_resource_group.resource_group.name
-  location                 = azurerm_resource_group.resource_group.location
-  account_tier             = "Standard"
-  account_replication_type = "LRS"
+## Storage (data storage + containers + blob properties)
+module "storage" {
+  source = "../infra/modules/storage"
 
-  min_tls_version                 = "TLS1_2"
-  allow_nested_items_to_be_public = false
+  resource_group_name = azurerm_resource_group.resource_group.name
+  location            = azurerm_resource_group.resource_group.location
+  tags                = local.tags
 
-  tags = local.tags
+  data_storage_account_name   = var.data_storage_account_name
+  raw_container_name          = var.raw_container_name
+  processed_container_name    = var.processed_container_name
+  enable_blob_versioning      = var.enable_blob_versioning
+  soft_delete_retention_days  = var.soft_delete_retention_days
 }
 
-## Azure Blob Containers
-resource "azurerm_storage_container" "blob_raw" {
-  name                  = var.raw_container_name
-  storage_account_name  = azurerm_storage_account.storage_account.name
-  container_access_type = "private"
+## Monitoring (Log Analytics + Application Insights)
+module "monitoring" {
+  source = "../infra/modules/monitoring"
+
+  resource_group_name          = azurerm_resource_group.resource_group.name
+  location                     = azurerm_resource_group.resource_group.location
+  tags                         = local.tags
+  log_analytics_name           = var.log_analytics_name
+  log_analytics_retention_days = var.log_analytics_retention_days
+  app_insights_name            = var.app_insights_name
 }
 
-resource "azurerm_storage_container" "blob_processed" {
-  name                  = var.processed_container_name
-  storage_account_name  = azurerm_storage_account.storage_account.name
-  container_access_type = "private"
+## Document Intelligence
+module "docu_intelligence" {
+  source = "../infra/modules/docu-intelligence"
+
+  resource_group_name        = azurerm_resource_group.resource_group.name
+  location                   = azurerm_resource_group.resource_group.location
+  tags                       = local.tags
+  document_intelligence_name = var.document_intelligence_name
 }
 
-## Azure Storage Blob Properties (versioning + soft delete)
-resource "azurerm_storage_account_blob_properties" "data_blob" {
-  storage_account_id = azurerm_storage_account.storage_account.id
+## Function App (plan + function app + RBAC)
+module "function_app" {
+  source = "../infra/modules/function-app"
 
-  versioning_enabled = var.enable_blob_versioning
+  resource_group_name = azurerm_resource_group.resource_group.name
+  location            = azurerm_resource_group.resource_group.location
+  tags                = local.tags
 
-  delete_retention_policy {
-    days = var.soft_delete_retention_days
-  }
+  function_plan_name = var.function_plan_name
+  function_app_name  = var.function_app_name
 
-  container_delete_retention_policy {
-    days = var.soft_delete_retention_days
-  }
-  
+  runtime_storage_account_name = var.runtime_storage_account_name
+
+  ## Runtime Storage connection (used by Functions runtime AzureWebJobsStorage)
+  runtime_storage_connection_string = module.function_app.runtime_storage_connection_string
+
+  ## Data storage information
+  data_storage_account_id   = module.storage.data_storage_account_id
+  data_storage_account_name = module.storage.data_storage_account_name
+  raw_container_name        = module.storage.raw_container_name
+  processed_container_name  = module.storage.processed_container_name
+
+  ## External integrations
+  docint_endpoint = module.docu_intelligence.docint_endpoint
+  docint_key      = module.docu_intelligence.docint_key
+
+  app_insights_connection_string = module.monitoring.app_insights_connection_string
+
+  ## Base settings from locals
+  function_app_settings_base = local.function_app_settings
+
   depends_on = [
-    azurerm_storage_container.blob_raw,
-    azurerm_storage_container.blob_processed
+    module.monitoring,
+    module.storage,
+    module.docu_intelligence
   ]
 }
-
-## Azure Runtime Storage Account (Functions AzureWebJobsStorage)
-resource "azurerm_storage_account" "runtime_storage" {
-  name                     = var.runtime_storage_account_name
-  resource_group_name      = azurerm_resource_group.resource_group.name
-  location                 = azurerm_resource_group.resource_group.location
-  account_tier             = "Standard"
-  account_replication_type = "LRS"
-
-  min_tls_version                 = "TLS1_2"
-  allow_nested_items_to_be_public = false
-
-  tags = local.tags
-}
-
-## Azure Log Analytics Workspace
-resource "azurerm_log_analytics_workspace" "law" {
-  name                = var.log_analytics_name
-  location            = azurerm_resource_group.resource_group.location
-  resource_group_name = azurerm_resource_group.resource_group.name
-  sku                 = "PerGB2018"
-
-  retention_in_days = 30
-
-  tags = local.tags
-}
-
-## Azure Application Insights
-resource "azurerm_application_insights" "insights" {
-  name                = var.app_insights_name
-  location            = azurerm_resource_group.resource_group.location
-  resource_group_name = azurerm_resource_group.resource_group.name
-  application_type    = "web"
-
-  workspace_id = azurerm_log_analytics_workspace.law.id
-
-  tags = local.tags
-}
-
-## Azure Cognitive Services - Document Intelligence
-resource "azurerm_cognitive_account" "cognitive_account" {
-  name                = var.document_intelligence_name
-  location            = azurerm_resource_group.resource_group.location
-  resource_group_name = azurerm_resource_group.resource_group.name
-
-  kind     = "FormRecognizer"
-  sku_name = "S0"
-
-  tags = local.tags
-}
-
-
-## Azure Function App Service Plan
-resource "azurerm_service_plan" "function_plan" {
-  name                = var.function_plan_name
-  resource_group_name = azurerm_resource_group.resource_group.name
-  location            = azurerm_resource_group.resource_group.location
-
-  os_type  = "Linux"
-  sku_name = "Y1" # Consumption
-
-  tags = local.tags
-}
-
-## Azure Function App
-resource "azurerm_linux_function_app" "function_app" {
-  name                = var.function_app_name
-  resource_group_name = azurerm_resource_group.resource_group.name
-  location            = azurerm_resource_group.resource_group.location
-
-  service_plan_id = azurerm_service_plan.function_plan.id
-
-  ## Storage Runtime settings
-  storage_account_name       = azurerm_storage_account.runtime_storage.name
-  storage_account_access_key = azurerm_storage_account.runtime_storage.primary_access_key
-  identity {
-    type = "SystemAssigned"
-  }
-
-  site_config {
-    application_stack {
-      python_version = "3.11"
-    }
-  }
-
-  app_settings = merge(local.function_app_settings, {
-    FUNCTIONS_WORKER_RUNTIME = "python"
-    WEBSITE_RUN_FROM_PACKAGE = "1"
-
-    ## Blob trigger + internal runtime storage binding
-    AzureWebJobsStorage = azurerm_storage_account.runtime_storage.primary_connection_string
-
-    ## App config
-    STORAGE_ACCOUNT     = azurerm_storage_account.storage_account.name
-    RAW_CONTAINER       = azurerm_storage_container.blob_raw.name
-    PROCESSED_CONTAINER = azurerm_storage_container.blob_processed.name
-
-    DOCINT_ENDPOINT = azurerm_cognitive_account.cognitive_account.endpoint
-    DOCINT_KEY      = azurerm_cognitive_account.cognitive_account.primary_access_key
-
-    ## App Insights integration
-    APPLICATIONINSIGHTS_CONNECTION_STRING = azurerm_application_insights.insights.connection_string
-  })
-
-  tags = local.tags
-
-  depends_on = [
-    azurerm_application_insights.insights,
-    azurerm_storage_account.runtime_storage,
-    azurerm_storage_account.storage_account,
-    azurerm_cognitive_account.cognitive_account
-  ]
-}
-
-## Assign Function App Managed Identity Blob Data Contributor role on DATA storage account
-resource "azurerm_role_assignment" "function_blob_contributor" {
-  scope                = azurerm_storage_account.storage_account.id
-  role_definition_name = "Storage Blob Data Contributor"
-  principal_id         = azurerm_linux_function_app.function_app.identity[0].principal_id
-
-  depends_on = [
-    azurerm_linux_function_app.function_app
-    ]
-}
-
 
 ## Static Web App
-resource "azurerm_static_site" "static_web_app" {
-  name                = var.static_web_app_name
+module "static_web_app" {
+  source = "../infra/modules/static-web-app"
+
   resource_group_name = azurerm_resource_group.resource_group.name
   location            = azurerm_resource_group.resource_group.location
+  tags                = local.tags
 
-  sku_tier = "Free"
-  sku_size = "Free"
-
-  tags = local.tags
+  static_web_app_name = var.static_web_app_name
 }

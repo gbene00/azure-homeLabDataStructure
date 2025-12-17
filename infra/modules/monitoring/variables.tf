@@ -16,7 +16,17 @@ variable "tags" {
   }
 }
 
-variable "static_web_app_name" {
+variable "log_analytics_name" {
   type    = string
-  default = "dp-static-app"
+  default = "dp-law"
+}
+
+variable "log_analytics_retention_days" {
+  type    = number
+  default = 30
+}
+
+variable "app_insights_name" {
+  type    = string
+  default = "dp-insights"
 }

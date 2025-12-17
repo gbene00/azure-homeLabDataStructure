@@ -3,43 +3,43 @@ output "resource_group_name" {
 }
 
 output "data_storage_account_name" {
-  value = azurerm_storage_account.storage_account.name
+  value = module.storage.data_storage_account_name
 }
 
 output "raw_container_name" {
-  value = azurerm_storage_container.blob_raw.name
+  value = module.storage.raw_container_name
 }
 
 output "processed_container_name" {
-  value = azurerm_storage_container.blob_processed.name
+  value = module.storage.processed_container_name
 }
 
 output "runtime_storage_account_name" {
-  value = azurerm_storage_account.runtime_storage.name
+  value = module.function_app.runtime_storage_account_name
 }
 
 output "function_app_name" {
-  value = azurerm_linux_function_app.function_app.name
+  value = module.function_app.function_app_name
 }
 
 output "function_hostname" {
-  value = azurerm_linux_function_app.function_app.default_hostname
+  value = module.function_app.function_hostname
 }
 
 output "docint_endpoint" {
-  value = azurerm_cognitive_account.cognitive_account.endpoint
+  value = module.docu_intelligence.docint_endpoint
 }
 
 output "static_web_app_default_hostname" {
-  value = azurerm_static_site.static_web_app.default_host_name
+  value = module.static_web_app.static_web_app_default_hostname
 }
 
 output "static_web_app_api_key" {
-  value     = azurerm_static_site.static_web_app.api_key
+  value     = module.static_web_app.static_web_app_api_key
   sensitive = true
 }
 
 output "app_insights_connection_string" {
-  value     = azurerm_application_insights.insights.connection_string
+  value     = module.monitoring.app_insights_connection_string
   sensitive = true
 }
