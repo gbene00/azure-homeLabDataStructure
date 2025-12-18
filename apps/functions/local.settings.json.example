@@ -1,0 +1,16 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "",
+    "FUNCTIONS_WORKER_RUNTIME": "python",
+
+    "STORAGE_ACCOUNT": "",
+    "RAW_CONTAINER": "raw-blob",
+    "PROCESSED_CONTAINER": "processed-blob",
+
+    "DOCINT_ENDPOINT": "https://westeurope.api.cognitive.microsoft.com/",
+    "DOCINT_KEY": "",
+
+    "APPLICATIONINSIGHTS_CONNECTION_STRING": ""
+  }
+}

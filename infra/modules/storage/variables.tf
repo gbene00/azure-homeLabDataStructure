@@ -37,12 +37,23 @@ variable "processed_container_name" {
   default = "processed-blob"
 }
 
+## Enable Blob Versioning
 variable "enable_blob_versioning" {
   type    = bool
   default = true
 }
 
+## Soft Delete Retention Days
 variable "soft_delete_retention_days" {
   type    = number
   default = 14
+}
+
+## Blob CORS Allowed Origins
+variable "blob_cors_allowed_origins" {
+  type    = list(string)
+  default = [
+    "http://localhost:8080",
+    "https://mango-beach-0dfbb7703.3.azurestaticapps.net"
+  ]
 }
