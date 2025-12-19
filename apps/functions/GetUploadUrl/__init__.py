@@ -17,7 +17,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 mimetype="application/json",
             )
 
-        storage_conn = os.environ.get("AzureWebJobsStorage")
+        storage_conn = os.environ.get("DATA_STORAGE_CONNECTION_STRING") or os.environ.get("AzureWebJobsStorage")
         account_name = os.environ.get("STORAGE_ACCOUNT")
         container_name = os.environ.get("RAW_CONTAINER", "raw-blob")
 
@@ -59,7 +59,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             container_name=container_name,
             blob_name=filename,
             account_key=account_key,
-            permission=BlobSasPermissions(write=True, create=True),
+            permission=BlobSasPermissions(create=True, write=True, add=True),
             expiry=expiry,
         )
 

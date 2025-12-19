@@ -9,7 +9,7 @@ from azure.storage.blob import BlobServiceClient
 
 
 def main(inputBlob: func.InputStream) -> None:
-    storage_conn = os.environ.get("AzureWebJobsStorage")
+    storage_conn = os.environ.get("DATA_STORAGE_CONNECTION_STRING") or os.environ.get("AzureWebJobsStorage")
     processed_container = os.environ.get("PROCESSED_CONTAINER", "processed-blob")
 
     docint_endpoint = os.environ.get("DOCINT_ENDPOINT")

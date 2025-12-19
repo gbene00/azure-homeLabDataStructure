@@ -72,6 +72,14 @@ module "function_app" {
 
   ## Base settings from locals
   function_app_settings_base = local.function_app_settings
+  
+  ## Data Storage connection string for Function App settings
+  data_storage_connection_string = module.storage.data_storage_primary_connection_string
+
+  function_cors_allowed_origins = [
+    "http://localhost:8080",
+    "https://mango-beach-0dfbb7703.3.azurestaticapps.net"
+  ]
 
   depends_on = [
     module.monitoring,

@@ -96,3 +96,18 @@ variable "function_app_settings_base" {
     WEBSITE_RUN_FROM_PACKAGE = "1"
   }
 }
+
+## Azure Data Storage Account Connection String for Function App
+variable "data_storage_connection_string" {
+  type      = string
+  default   = ""
+  sensitive = true
+}
+
+## Azure Function App CORSS
+variable "function_cors_allowed_origins" {
+  type    = list(string)
+  default = [
+    "http://localhost:8080"
+  ]
+}

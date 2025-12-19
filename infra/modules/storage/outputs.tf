@@ -13,3 +13,8 @@ output "raw_container_name" {
 output "processed_container_name" {
   value = azurerm_storage_container.blob_processed.name
 }
+
+output "data_storage_primary_connection_string" {
+  value     = azurerm_storage_account.storage_account.primary_connection_string
+  sensitive = true
+}

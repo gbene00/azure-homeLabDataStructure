@@ -44,6 +44,11 @@ resource "azurerm_linux_function_app" "function_app" {
     application_stack {
       python_version = "3.11"
     }
+
+    cors {
+      allowed_origins     = var.function_cors_allowed_origins
+      support_credentials = false
+    }
   }
 
   app_settings = merge(var.function_app_settings_base, {
@@ -60,6 +65,7 @@ resource "azurerm_linux_function_app" "function_app" {
 
     ## App Insights integration
     APPLICATIONINSIGHTS_CONNECTION_STRING = var.app_insights_connection_string
+    DATA_STORAGE_CONNECTION_STRING = var.data_storage_connection_string
   })
 
   tags = var.tags
